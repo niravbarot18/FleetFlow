@@ -1,0 +1,29 @@
+[
+  {
+    "id": "31ec88d7-009b-4a63-a8b5-36c88162db00",
+    "vehicle_id": "98a2072c-b2c1-46d4-8ecd-b74ecd2c58d4",
+    "service_date": "2026-02-23",
+    "service_type": "Brake Service",
+    "cost": 80.0,
+    "notes": "",
+    "created_at": "2026-02-21T09:38:06.623087+00:00"
+  },
+  {
+    "id": "3c304128-5192-4a38-bda4-708aeda56d15",
+    "vehicle_id": "98a2072c-b2c1-46d4-8ecd-b74ecd2c58d4",
+    "service_date": "2026-02-21",
+    "service_type": "Brake Service",
+    "cost": 350.0,
+    "notes": "",
+    "created_at": "2026-02-21T10:37:21.116063+00:00"
+  },
+  {
+    "id": "771de3a5-1762-4369-8e7f-cd9c8de8d13e",
+    "vehicle_id": "f7edb65c-547f-4e9c-9bbc-3e7250680a71",
+    "service_date": "2026-02-21",
+    "service_type": "Oil Change",
+    "cost": 100.0,
+    "notes": "",
+    "created_at": "2026-02-21T10:40:46.234923+00:00"
+  }
+]

@@ -206,8 +206,8 @@ const FuelExpensesPage = () => {
                           <td className="px-4 py-3 text-sm text-slate-900 font-medium">{getVehicleName(log.vehicle_id)}</td>
                           <td className="px-4 py-3 text-sm text-slate-600">{new Date(log.date).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-sm text-slate-700">{log.liters.toFixed(2)} L</td>
-                          <td className="px-4 py-3 text-sm text-slate-900 font-semibold">${log.cost.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-sm text-slate-600">${(log.cost / log.liters).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-sm text-slate-900 font-semibold">₹{log.cost.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">₹{(log.cost / log.liters).toFixed(2)}</td>
                           <td className="px-4 py-3 text-sm text-slate-600">{log.odometer_reading.toFixed(0)} km</td>
                         </tr>
                       ))
@@ -257,7 +257,7 @@ const FuelExpensesPage = () => {
                           <td className="px-4 py-3 text-sm text-slate-900 font-medium">{getVehicleName(log.vehicle_id)}</td>
                           <td className="px-4 py-3 text-sm text-slate-600">{new Date(log.date).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-sm text-slate-700">{log.expense_type}</td>
-                          <td className="px-4 py-3 text-sm text-slate-900 font-semibold">${log.amount.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-sm text-slate-900 font-semibold">₹{log.amount.toFixed(2)}</td>
                           <td className="px-4 py-3 text-sm text-slate-600">{log.notes || '-'}</td>
                         </tr>
                       ))
@@ -327,7 +327,7 @@ const FuelExpensesPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Cost ($)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Cost (₹)</label>
                     <input
                       data-testid="fuel-cost-input"
                       type="number"
@@ -419,7 +419,7 @@ const FuelExpensesPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Amount ($)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Amount (₹)</label>
                     <input
                       data-testid="expense-amount-input"
                       type="number"

@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from contextlib import asynccontextmanager
 import os
 import logging
 from pathlib import Path
@@ -19,10 +20,144 @@ import csv
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+import json
+from pathlib import Path
+
+# ============ JSON STORAGE FALLBACK ============
+class JSONCollection:
+    def __init__(self, name, data_dir):
+        self.name = name
+        self.file_path = data_dir / f"{name}.json"
+        if not self.file_path.exists():
+            with open(self.file_path, 'w') as f:
+                json.dump([], f)
+
+    def _load(self):
+        try:
+            with open(self.file_path, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return []
+
+    def _save(self, data):
+        with open(self.file_path, 'w') as f:
+            json.dump(data, f, indent=2)
+
+    async def find_one(self, query, projection=None):
+        data = self._load()
+        for item in data:
+            match = True
+            for k, v in query.items():
+                if isinstance(v, dict) and "$in" in v:
+                    if item.get(k) not in v["$in"]:
+                        match = False
+                        break
+                elif item.get(k) != v:
+                    match = False
+                    break
+            if match:
+                return item
+        return None
+
+    async def insert_one(self, document):
+        data = self._load()
+        data.append(document)
+        self._save(data)
+        return type('obj', (object,), {'inserted_id': document.get('id', str(uuid.uuid4()))})
+
+    async def update_one(self, query, update):
+        data = self._load()
+        updated = False
+        for item in data:
+            match = True
+            for k, v in query.items():
+                if item.get(k) != v:
+                    match = False
+                    break
+            if match:
+                if "$set" in update:
+                    item.update(update["$set"])
+                else:
+                    item.update(update)
+                updated = True
+                break
+        if updated:
+            self._save(data)
+        return type('obj', (object,), {'modified_count': 1 if updated else 0})
+
+    async def delete_one(self, query):
+        data = self._load()
+        initial_len = len(data)
+        data = [item for item in data if not all(item.get(k) == v for k, v in query.items())]
+        self._save(data)
+        return type('obj', (object,), {'deleted_count': initial_len - len(data)})
+
+    async def count_documents(self, query):
+        data = self._load()
+        count = 0
+        for item in data:
+            match = True
+            for k, v in query.items():
+                if isinstance(v, dict) and "$in" in v:
+                    if item.get(k) not in v["$in"]:
+                        match = False
+                        break
+                elif item.get(k) != v:
+                    match = False
+                    break
+            if match:
+                count += 1
+        return count
+
+    def find(self, query=None, projection=None):
+        data = self._load()
+        
+        class Cursor:
+            def __init__(self, data):
+                self.data = data
+            def sort(self, field, direction):
+                try:
+                    self.data.sort(key=lambda x: x.get(field, ""), reverse=(direction == -1))
+                except Exception:
+                    pass
+                return self
+            async def to_list(self, length):
+                return self.data[:length]
+
+        if not query:
+            return Cursor(data)
+        
+        filtered = []
+        for item in data:
+            match = True
+            for k, v in query.items():
+                if isinstance(v, dict) and "$in" in v:
+                    if item.get(k) not in v["$in"]:
+                        match = False
+                        break
+                elif item.get(k) != v:
+                    match = False
+                    break
+            if match:
+                filtered.append(item)
+        
+        return Cursor(filtered)
+
+class JSONDatabase:
+    def __init__(self, data_dir):
+        self.data_dir = Path(data_dir)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.users = JSONCollection("users", self.data_dir)
+        self.vehicles = JSONCollection("vehicles", self.data_dir)
+        self.drivers = JSONCollection("drivers", self.data_dir)
+        self.trips = JSONCollection("trips", self.data_dir)
+        self.maintenance_logs = JSONCollection("maintenance_logs", self.data_dir)
+        self.fuel_logs = JSONCollection("fuel_logs", self.data_dir)
+        self.expense_logs = JSONCollection("expense_logs", self.data_dir)
+
+# Initialize JSON DB
+data_dir = ROOT_DIR / "data"
+db = JSONDatabase(data_dir)
 
 # JWT and Password Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "fleetflow-secret-key-change-in-production")
@@ -32,7 +167,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+app = FastAPI(lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
 
 # ============ AUTH UTILITIES ============
@@ -708,7 +847,3 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

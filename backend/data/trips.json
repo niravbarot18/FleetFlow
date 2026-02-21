@@ -1,0 +1,28 @@
+[
+  {
+    "id": "40fa2ade-f50b-45b0-9d27-e49824d09f20",
+    "origin": "Ahmedabad",
+    "destination": "Gandhinagar",
+    "cargo_weight": 5000.0,
+    "cargo_description": "Electronics",
+    "vehicle_id": "f7edb65c-547f-4e9c-9bbc-3e7250680a71",
+    "driver_id": "ae8075e7-e605-4190-981d-135cd484fdc4",
+    "status": "Completed",
+    "distance": 40.0,
+    "created_at": "2026-02-21T09:28:35.664640+00:00",
+    "completed_at": "2026-02-21T09:29:15.679146+00:00"
+  },
+  {
+    "id": "a133f000-8757-4c60-adab-eace4b83e9cd",
+    "origin": "Gandhinagar ",
+    "destination": "Mehsana",
+    "cargo_weight": 700.0,
+    "cargo_description": "Cold Drinks",
+    "vehicle_id": "0bae7955-1a21-4bd5-9cc2-f53b105d42c2",
+    "driver_id": "459e4956-23c0-4ebe-988d-c7d37549e257",
+    "status": "Dispatched",
+    "distance": 61.0,
+    "created_at": "2026-02-21T09:37:05.202031+00:00",
+    "completed_at": null
+  }
+]
