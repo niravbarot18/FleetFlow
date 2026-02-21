@@ -416,7 +416,9 @@ async def create_trip(trip_data: TripCreate, current_user: dict = Depends(get_cu
         raise HTTPException(status_code=400, detail="Driver is suspended")
     
     # Check license expiry
-    expiry_date = datetime.fromisoformat(driver["license_expiry"])
+    expiry_date = datetime.fromisoformat(driver["license_expiry"].replace('Z', '+00:00'))
+    if expiry_date.tzinfo is None:
+        expiry_date = expiry_date.replace(tzinfo=timezone.utc)
     if expiry_date < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Driver's license has expired")
     
